@@ -1,0 +1,30 @@
+﻿# Agrega esta sección completa después de las apps de Django
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+]
+
+# Tus aplicaciones personalizadas y de terceros
+INSTALLED_APPS += [
+    # Django REST Framework
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
+    
+    # CORS
+    'corsheaders',
+    
+    # API Documentation
+    'drf_yasg',
+    
+    # Tus apps
+    'accounts',           # App accounts que ya tienes
+    'apps.security',      # App security dentro de apps
+    'apps.users',         # App users dentro de apps
+    'dj_rest_auth',       # Para autenticación REST
+    'rest_framework.authtoken',  # Para tokens de autenticación
+]

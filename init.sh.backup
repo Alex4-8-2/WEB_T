@@ -1,0 +1,44 @@
+#!/bin/bash
+set -e
+
+echo "=========================================="
+echo "?? INICIANDO SISTEMA DE LOGIN - PASO A PASO"
+echo "=========================================="
+
+# Paso 1: Esperar PostgreSQL
+echo "1. Esperando PostgreSQL..."
+sleep 5
+echo "   ? PostgreSQL asumido listo (sleep 5s)"
+
+# Paso 2: Aplicar migraciones
+echo "2. Aplicando migraciones..."
+python manage.py migrate --noinput
+echo "   ? Migraciones aplicadas"
+
+# Paso 3: Crear superusuario (si no existe)
+echo "3. Creando superusuario..."
+python -c "
+import os
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'core.settings')
+import django
+django.setup()
+from django.contrib.auth import get_user_model
+User = get_user_model()
+if not User.objects.filter(username='admin').exists():
+    User.objects.create_superuser('admin', 'admin@example.com', 'admin123')
+    print('? Superusuario creado: admin/admin123')
+else:
+    print('? Superusuario ya existe')
+" || echo "?  Error creando superusuario, continuando..."
+
+# Paso 4: Iniciar servidor
+echo "4. Iniciando servidor Django..."
+echo "   ?? URL: http://0.0.0.0:8000"
+echo "   ?? Admin: http://0.0.0.0:8000/admin"
+echo "   ?? Credenciales: admin / admin123"
+echo "=========================================="
+
+# Ejecutar servidor
+exec python manage.py runserver 0.0.0.0:8000
+
+

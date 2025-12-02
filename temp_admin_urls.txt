@@ -1,0 +1,6 @@
+﻿# Admin Dashboard personalizado
+path('admin/dashboard/', admin_dashboard, name='admin_dashboard'),
+path('admin/tools/', admin_tools, name='admin_tools'),
+
+# Redirección de admin/ a dashboard personalizado
+path('admin/', lambda request: redirect('/admin/dashboard/')),

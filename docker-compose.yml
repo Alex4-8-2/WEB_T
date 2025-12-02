@@ -1,39 +1,54 @@
-﻿version: '3.8'
-
-services:
+﻿services:
   postgres:
     image: postgres:15-alpine
     container_name: login_db
+    restart: always
     environment:
-      POSTGRES_DB: login_db
+      POSTGRES_DB: login_system
       POSTGRES_USER: login_user
-      POSTGRES_PASSWORD: changeme123
+      POSTGRES_PASSWORD: login_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U login_user -d login_system"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:7-alpine
     container_name: login_redis
+    restart: always
     ports:
       - "6379:6379"
+    command: redis-server --save 60 1 --loglevel warning
     volumes:
       - redis_data:/data
 
   web:
     build: .
     container_name: login_web
+    restart: always
     ports:
       - "8000:8000"
-    environment:
-      DEBUG: "True"
-      PYTHONUNBUFFERED: "1"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DJANGO_SECRET_KEY: dev-secret-key-change-this-in-production
+      POSTGRES_DB: login_system
+      POSTGRES_USER: login_user
+      POSTGRES_PASSWORD: login_password
+      POSTGRES_HOST: login_db
+      REDIS_HOST: login_redis
     volumes:
       - ./src:/app
-    restart: unless-stopped
+      - ./init.sh:/init.sh
+    command: /bin/sh /init.sh
 
 volumes:
   postgres_data:

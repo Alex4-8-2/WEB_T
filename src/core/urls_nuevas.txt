@@ -1,0 +1,13 @@
+﻿from . import api_views
+
+urlpatterns = [
+    # ... tus URLs existentes ...
+
+    # API para integración con frontend de turismo
+    path('api/turismo/login/', api_views.turismo_login, name='turismo_login'),
+    path('api/turismo/register/', api_views.turismo_register, name='turismo_register'),
+    path('api/turismo/logout/', api_views.turismo_logout, name='turismo_logout'),
+    path('api/turismo/check/', api_views.turismo_check, name='turismo_check'),
+    path('api/turismo/sync/', api_views.turismo_sync, name='turismo_sync'),
+    path('api/turismo/profile/', api_views.turismo_profile, name='turismo_profile'),
+]

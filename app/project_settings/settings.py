@@ -1,13 +1,16 @@
-# settings.py (extractos importantes)
+﻿# settings.py (extractos importantes)
 import os
 from pathlib import Path
+
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 import environ
 from datetime import timedelta
 
 env = environ.Env(DEBUG=(bool, False))
 environ.Env.read_env(os.path.join(BASE_DIR.parent, '.env'))  # apunta a D:\WEB_T\LOGIN\.env
 
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = env('DJANGO_SECRET_KEY')
 DEBUG = env('DJANGO_DEBUG')
@@ -54,7 +57,7 @@ PASSWORD_HASHERS = [
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': int(env('PASSWORD_MIN_LENGTH', 12))}},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', 'OPTIONS': {'min_length': int(env.str('PASSWORD_MIN_LENGTH', default='12'))}},
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
@@ -122,3 +125,5 @@ DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL')
 # Redis config for blacklist & sessions
 REDIS_HOST = env('REDIS_HOST')
 REDIS_PORT = env('REDIS_PORT')
+
+

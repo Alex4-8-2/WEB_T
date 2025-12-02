@@ -1,26 +1,40 @@
 ﻿FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
 WORKDIR /app
 
-# Copiar requirements primero (mejor caché)
-COPY requirements.txt .
-RUN pip install --upgrade pip && pip install -r requirements.txt
+# Instalar dependencias mínimas PERO necesarias
+RUN apt-get update && apt-get install -y \
+    curl \
+    postgresql-client \
+    net-tools \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copiar código
+# Copiar requirements
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copiar aplicación
 COPY ./src /app
 
-# Copiar script de inicialización
-COPY init.sh /init.sh
-RUN chmod +x /init.sh
-
-# Crear usuario no-root
-RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
-USER appuser
+# Crear init.sh MÁS simple
+RUN echo '#!/bin/bash' > /init.sh && \
+    echo 'echo "=== INICIANDO SISTEMA ==="' >> /init.sh && \
+    echo 'sleep 10' >> /init.sh && \
+    echo 'python manage.py migrate --noinput' >> /init.sh && \
+    echo 'python manage.py shell -c "' >> /init.sh && \
+    echo 'from django.contrib.auth import get_user_model' >> /init.sh && \
+    echo 'User = get_user_model()' >> /init.sh && \
+    echo 'if not User.objects.filter(username=\"admin\").exists():' >> /init.sh && \
+    echo '    User.objects.create_superuser(\"admin\", \"admin@example.com\", \"admin123\")' >> /init.sh && \
+    echo '    print(\"Superusuario creado\")' >> /init.sh && \
+    echo 'else:' >> /init.sh && \
+    echo '    print(\"Superusuario ya existe\")' >> /init.sh && \
+    echo '"' >> /init.sh && \
+    echo 'echo "Servidor: http://0.0.0.0:8000"' >> /init.sh && \
+    echo 'exec python manage.py runserver 0.0.0.0:8000' >> /init.sh && \
+    chmod +x /init.sh
 
 EXPOSE 8000
 
-# Usar el script de inicialización
-CMD ["/init.sh"]
+CMD ["/bin/bash", "/init.sh"]
