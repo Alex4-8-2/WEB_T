@@ -1,23 +1,26 @@
-FROM python:3.11-slim
+﻿FROM python:3.12-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
-# system deps for psycopg2, openssl, argon2 etc
-RUN apt-get update && apt-get install -y build-essential libpq-dev gcc libssl-dev && rm -rf /var/lib/apt/lists/*
+# Copiar requirements primero (mejor caché)
+COPY requirements.txt .
+RUN pip install --upgrade pip && pip install -r requirements.txt
 
-COPY requirements.txt /app/
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt
+# Copiar código
+COPY ./src /app
 
-COPY . /app/
+# Copiar script de inicialización
+COPY init.sh /init.sh
+RUN chmod +x /init.sh
 
-# entrypoint
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Crear usuario no-root
+RUN useradd -m -u 1000 appuser && chown -R appuser:appuser /app
+USER appuser
 
 EXPOSE 8000
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["gunicorn", "app.wsgi:application", "--bind", "0.0.0.0:8000"]
+
+# Usar el script de inicialización
+CMD ["/init.sh"]
